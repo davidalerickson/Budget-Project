@@ -24,6 +24,7 @@ var budgetController = (function(){
             inc: 0
         }
     }
+
     
 
     return {
