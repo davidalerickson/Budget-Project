@@ -78,7 +78,7 @@ var UIController = (function(){
             return {
                 type: document.querySelector(DOMStrings.inputType).value, //will be either inc or exp depending on which selected
                 description: document.querySelector(DOMStrings.inputDescription).value, 
-                value: document.querySelector(DOMStrings.inputValue).value
+                value: parseFloat(document.querySelector(DOMStrings.inputValue).value)
             }
             // console.log(type + '-----' + description + '----- $' + value); //why does this return undefined? when called
         },
@@ -120,6 +120,8 @@ var UIController = (function(){
 })();
 
 
+
+
 //GLOBAL APP CONTROLLER
 var controller = (function(budgetCtrl, UICtrl){
 
@@ -137,24 +139,34 @@ var controller = (function(budgetCtrl, UICtrl){
         });
     }
     
+    var updateBudget = function(){
+        //1. Calculate the budget
+
+        //2. Return the budget
+
+        //3. Display the budget on the UI
+    }
+
     var ctrlAddItem = function(){
 
         var input, newItem;
 
-        console.log('Button clicked or Enter pressed');
         //1.Get the field input datq
         input  = UICtrl.getInput();
         console.log(input);
 
-        // 2. Add the item to the budget controller
-        newItem = budgetCtrl.addItem(input.type, input.description, input.value); 
-        //3.Add the ttem to the UI.
-        UICtrl.addListItem(newItem, input.type);
-        //4. Cleare the fields
-        UICtrl.clearFileds();
-        //5. Calculate the budget
+        if(input.description !== '' && !isNaN(input.value) && input.value > 0){
 
-        //6. Display the budget on the UI
+    
+            // 2. Add the item to the budget controller
+            newItem = budgetCtrl.addItem(input.type, input.description, input.value); 
+            //3.Add the ttem to the UI.
+            UICtrl.addListItem(newItem, input.type);
+            //4. Cleare the fields
+            UICtrl.clearFileds();
+            //5. Calculate and update buget
+            updateBudget();
+        }
     };
 
     return {init: function(){
