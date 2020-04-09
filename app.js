@@ -104,6 +104,16 @@ var UIController = (function(){
 
         getDOMStrings: function(){
             return DOMStrings;
+        },
+        
+        clearFileds: function(){
+            var fields;
+            fields = document.querySelectorAll(DOMStrings.inputDescription + ' ,' + DOMStrings.inputValue);
+            //covert nodelist to array by using Array.prototype to trick into returning an array from a nodelist
+            var fieldsArray = Array.prototype.slice.call(fields);
+            fieldsArray.forEach(function(current, index, array){
+                current.value = '';
+            })
         }
     }
 })();
@@ -139,9 +149,11 @@ var controller = (function(budgetCtrl, UICtrl){
         newItem = budgetCtrl.addItem(input.type, input.description, input.value); 
         //3.Add the ttem to the UI.
         UICtrl.addListItem(newItem, input.type);
-        //4. Calculate the budget
+        //4. Cleare the fields
+        UICtrl.clearFileds();
+        //5. Calculate the budget
 
-        //5. Display the budget on the UI
+        //6. Display the budget on the UI
     };
 
     return {init: function(){
