@@ -114,6 +114,7 @@ var UIController = (function(){
             fieldsArray.forEach(function(current, index, array){
                 current.value = '';
             })
+            fieldsArray[0].focus();
         }
     }
 })();
