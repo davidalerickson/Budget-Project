@@ -150,144 +150,165 @@ var budgetController = (function(){
 
 
 //UI CONTROLLER
-var UIController = (function(){
+var UIController = (function () {
+  var DOMStrings = {
+    inputType: ".add__type",
+    inputDescription: ".add__description",
+    inputValue: ".add__value",
+    inputButton: ".add__btn",
+    incomeContainer: ".income__list",
+    expensesContainer: ".expenses__list",
+    budgetLabel: ".budget__value",
+    incomeLabel: ".budget__income--value",
+    expensesLabel: ".budget__expenses--value",
+    percentageLabel: ".budget__expenses--percentage",
+    container: ".container", //encapsulates income and expenses
+    expensesPercLabel: ".item__percentage",
+    dateLabel: ".budget__title--month",
+  };
 
-    var DOMStrings = {
-        inputType: '.add__type',
-        inputDescription: '.add__description',
-        inputValue: '.add__value',
-        inputButton: '.add__btn',
-        incomeContainer: '.income__list',
-        expensesContainer: '.expenses__list',
-        budgetLabel: '.budget__value',
-        incomeLabel: '.budget__income--value',
-        expensesLabel: '.budget__expenses--value',
-        percentageLabel: '.budget__expenses--percentage',
-        container: '.container', //encapsulates income and expenses
-        expensesPercLabel: '.item__percentage',
-        dateLabel: '.budget__title--month'
+  formatNumber = function (num, type) {
+    // + or - before the number
+    //exactly 2 decimal points
+    //a comma seperating thousands
+    var numsSplit, int, dec;
 
+    num = Math.abs(num);
+    num = num.toFixed(2);
+
+    numsSplit = num.split(".");
+    int = numsSplit[0];
+    dec = numsSplit[1];
+
+    if (int.length > 3) {
+      int = int.substr(0, int.length - 3) + "," + int.substr(int.length - 3, 3);
     }
+    return (type === "exp" ? "-" : "+") + " " + int + "." + dec;
+  };
 
+  return {
+    getInput: function () {
+      return {
+        type: document.querySelector(DOMStrings.inputType).value, //will be either inc or exp depending on which selected
+        description: document.querySelector(DOMStrings.inputDescription).value,
+        value: parseFloat(document.querySelector(DOMStrings.inputValue).value),
+      };
+      // console.log(type + '-----' + description + '----- $' + value); //why does this return undefined? when called
+    },
+    addListItem: function (obj, type) {
+      var html, newHtml, element;
+      //Create HTML Sring with placeholder text - placeholders delimited with % to make finding and replacing easeer
+      if (type === "inc") {
+        element = DOMStrings.incomeContainer;
+        html =
+          '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+      } else if (type === "exp") {
+        element = DOMStrings.expensesContainer;
+        html =
+          '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"> <div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i><button></div></div></div>';
+      }
 
-    formatNumber = function(num, type){
-        // + or - before the number
-        //exactly 2 decimal points
-        //a comma seperating thousands
-        var numsSplit, int, dec;
+      //Replace placeholder text with data
+      newHtml = html.replace("%id%", obj.id);
+      newHtml = newHtml.replace("%description%", obj.description);
+      newHtml = newHtml.replace("%value%", formatNumber(obj.value, type));
+      //Insert HtML into the DOM
 
-        num = Math.abs(num);
-        num = num.toFixed(2);
+      document.querySelector(element).insertAdjacentHTML("beforeend", newHtml);
+    },
 
-        numsSplit = num.split('.');
-        int = numsSplit[0];
-        dec = numsSplit[1];
+    deleteListItem: function (selectorID) {
+      var el;
+      el = document.getElementById(selectorID);
+      el.parentNode.removeChild(el);
+    },
 
-        if(int.length > 3){
-            int = int.substr(0, int.length - 3) + ',' + int.substr(int.length - 3, 3);
+    clearFileds: function () {
+      var fields;
+      fields = document.querySelectorAll(
+        DOMStrings.inputDescription + " ," + DOMStrings.inputValue
+      );
+      //covert nodelist to array by using Array.prototype to trick into returning an array from a nodelist
+      var fieldsArray = Array.prototype.slice.call(fields);
+      fieldsArray.forEach(function (current, index, array) {
+        current.value = "";
+      });
+      fieldsArray[0].focus();
+    },
+    displayBudget: function (obj) {
+      var type;
+      obj.budget > 0 ? (type = "inc") : (type = "exp");
+
+      document.querySelector(DOMStrings.budgetLabel).textContent = formatNumber(
+        obj.budget,
+        type
+      );
+      document.querySelector(DOMStrings.incomeLabel).textContent = formatNumber(
+        obj.totalInc,
+        "inc"
+      );
+      document.querySelector(
+        DOMStrings.expensesLabel
+      ).textContent = formatNumber(obj.totalExp, "exp");
+      if (obj.percentage > 0) {
+        document.querySelector(DOMStrings.percentageLabel).textContent =
+          obj.percentage + "%";
+      } else {
+        document.querySelector(DOMStrings.percentageLabel).textContent = "---";
+      }
+    },
+
+    displayPercentages: function (percentages) {
+      var fields = document.querySelectorAll(DOMStrings.expensesPercLabel);
+
+      var nodeListForEach = function (list, callback) {
+        //takes a nodelist and loops through it.
+        for (var i = 0; i < fields.length; i++) {
+          callback(list[i], i);
         }
-        return (type === 'exp' ? '-' : '+') + ' ' + int + '.' + dec;
-    }
+      };
 
-    return {
-        getInput: function(){
-            return {
-                type: document.querySelector(DOMStrings.inputType).value, //will be either inc or exp depending on which selected
-                description: document.querySelector(DOMStrings.inputDescription).value, 
-                value: parseFloat(document.querySelector(DOMStrings.inputValue).value)
-            }
-            // console.log(type + '-----' + description + '----- $' + value); //why does this return undefined? when called
-        },
-        addListItem: function(obj, type){
-            var html, newHtml, element;
-            //Create HTML Sring with placeholder text - placeholders delimited with % to make finding and replacing easeer
-            if(type === 'inc'){
-                element = DOMStrings.incomeContainer;
-                html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
-            }else if(type ==='exp'){
-                element = DOMStrings.expensesContainer;
-                html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"> <div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i><button></div></div></div>'
-            }
+      nodeListForEach(fields, function (current, index) {
+        if (percentages[index] > 0) {
+          current.textContent = percentages[index] + "%";
+        } else {
+          current.textContent = "---";
+        }
+      });
+    },
 
-            //Replace placeholder text with data
-            newHtml = html.replace('%id%', obj.id);
-            newHtml = newHtml.replace('%description%', obj.description);
-            newHtml = newHtml.replace('%value%', formatNumber(obj.value, type));
-            //Insert HtML into the DOM
+    displayDate: function () {
+      var now, year, month, months, dateString;
 
-            document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
-        },
+      months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
 
-        deleteListItem: function(selectorID){
-            var el;
-            el = document.getElementById(selectorID);
-            el.parentNode.removeChild(el);
-        },
+      now = new Date();
 
-        clearFileds: function(){
-            var fields;
-            fields = document.querySelectorAll(DOMStrings.inputDescription + ' ,' + DOMStrings.inputValue);
-            //covert nodelist to array by using Array.prototype to trick into returning an array from a nodelist
-            var fieldsArray = Array.prototype.slice.call(fields);
-            fieldsArray.forEach(function(current, index, array){
-                current.value = '';
-            })
-            fieldsArray[0].focus();
-        },
-        displayBudget: function(obj){
-            var type;
-            obj.budget > 0 ? type = 'inc' : type = 'exp';
+      month = now.getMonth();
+      year = now.getFullYear();
 
-            document.querySelector(DOMStrings.budgetLabel). textContent = formatNumber(obj.budget, type);
-            document.querySelector(DOMStrings.incomeLabel).textContent = formatNumber(obj.totalInc, 'inc');
-            document.querySelector(DOMStrings.expensesLabel).textContent = formatNumber(obj.totalExp, 'exp');
-            if(obj.percentage >0){
-                document.querySelector(DOMStrings.percentageLabel).textContent = obj.percentage + '%';
-            }else{
-                document.querySelector(DOMStrings.percentageLabel).textContent = '---';
-            }
-        },
+      dateString = months[month] + ", " + year;
 
-        displayPercentages: function(percentages){
-            var fields = document.querySelectorAll(DOMStrings.expensesPercLabel);
+      document.querySelector(DOMStrings.dateLabel).textContent = dateString;
+    },
 
-            var nodeListForEach = function(list, callback){
-                //takes a nodelist and loops through it.
-                for(var i = 0; i < fields.length; i++){
-                    callback(list[i], i);
-                }
-            };
-
-            
-            nodeListForEach(fields, function(current, index){
-                if(percentages[index] > 0){
-                    current.textContent = percentages[index] + '%';
-                }else{
-                    current.textContent = '---';
-                }
-            });
-        },
-
-        displayDate: function(){
-            var now, year, month, months, dateString;
-
-            months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-            now = new Date();
-
-            month = now.getMonth();
-            year = now.getFullYear();
-
-            dateString = months[month] + ', ' + year;
-
-            document.querySelector(DOMStrings.dateLabel).textContent = dateString;
-        },
-
-        getDOMStrings: function(){
-            return DOMStrings;
-        },
-        
-    }
+    getDOMStrings: function () {
+      return DOMStrings;
+    },
+  };
 })();
 
 
