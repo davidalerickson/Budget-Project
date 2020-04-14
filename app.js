@@ -168,6 +168,26 @@ var UIController = (function(){
 
     }
 
+
+    formatNumber = function(num, type){
+        // + or - before the number
+        //exactly 2 decimal points
+        //a comma seperating thousands
+        var numsSplit, int, dec;
+
+        num = Math.abs(num);
+        num = num.toFixed(2);
+
+        numsSplit = num.split('.');
+        int = numsSplit[0];
+        dec = numsSplit[1];
+
+        if(int.length > 3){
+            int = int.substr(0, int.length - 3) + ',' + int.substr(int.length - 3, 3);
+        }
+        return (type === 'ext' ? '-' : '+') + ' ' + int + '.' + dec;
+    }
+
     return {
         getInput: function(){
             return {
@@ -191,7 +211,7 @@ var UIController = (function(){
             //Replace placeholder text with data
             newHtml = html.replace('%id%', obj.id);
             newHtml = newHtml.replace('%description%', obj.description);
-            newHtml = newHtml.replace('%value%', obj.value);
+            newHtml = newHtml.replace('%value%', formatNumber(obj.value));
             //Insert HtML into the DOM
 
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
@@ -214,7 +234,10 @@ var UIController = (function(){
             fieldsArray[0].focus();
         },
         displayBudget: function(obj){
-            document.querySelector(DOMStrings.budgetLabel). textContent = obj.budget;
+            var type;
+            obj.type === 'exp' ? type = 'exp' : type = 'inc';
+
+            document.querySelector(DOMStrings.budgetLabel). textContent = formatNumber(obj.budget, type);
             document.querySelector(DOMStrings.incomeLabel).textContent = obj.totalInc;
             document.querySelector(DOMStrings.expensesLabel).textContent = obj.totalExp;
             if(obj.percentage >0){
@@ -226,7 +249,22 @@ var UIController = (function(){
 
         displayPercentages: function(percentages){
             var fields = document.querySelectorAll(DOMStrings.expensesPercLabel);
+
+            var nodeListForEach = function(list, callback){
+                //takes a nodelist and loops through it.
+                for(var i = 0; i < fields.length; i++){
+                    callback(list[i], i);
+                }
+            };
+
             
+            nodeListForEach(fields, function(current, index){
+                if(percentages[index] > 0){
+                    current.textContent = percentages[index] + '%';
+                }else{
+                    current.textContent = '---';
+                }
+            });
         },
 
         getDOMStrings: function(){
@@ -275,7 +313,7 @@ var controller = (function(budgetCtrl, UICtrl){
         //2. Read percentages from budget controller
         var percentages = budgetCtrl.getPercentages();
         //3. Update the UI with the new percentages
-        console.log(percentages);
+        UICtrl.displayPercentages(percentages);
     }
 
 
